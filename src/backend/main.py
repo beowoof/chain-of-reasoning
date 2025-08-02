@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.concurrency import asynccontextmanager
 from pydantic import BaseModel
 from langchain_community.llms import Ollama
 from langchain.agents import AgentExecutor, create_react_agent
@@ -16,23 +17,22 @@ from .vector_store import (
 )
 from langchain_core.output_parsers import StrOutputParser
 
-
-app = FastAPI()
-
 # --- Global State ---
 vector_store = None
 embeddings = None
 agent_executor = None
 
-@app.on_event("startup")
-def on_startup():
-    """Initializes global resources on application startup."""
+@asynccontextmanager
+async def lifespan(app):
     global vector_store, embeddings, agent_executor
     print("Starting up and initializing resources...")
     embeddings = get_embeddings()
     vector_store = load_vector_store(embeddings)
     agent_executor = create_agent()
     print("Startup complete.")
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 class Question(BaseModel):
     text: str
@@ -212,4 +212,4 @@ def ask(question: Question):
         return {"answer": final_answer}
     except Exception as e:
         print(f"An error occurred during agent invocation: {e}")
-        return {"error": f"An error occurred: {e}"}
+        return {"error": f"An internal error occurred"}
