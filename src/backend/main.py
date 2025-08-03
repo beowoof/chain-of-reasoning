@@ -90,4 +90,4 @@ def ask(question: Question):
         }
     except Exception as e:
         print(f"An error occurred during agent invocation: {e}")
-        return {"error": f"An error occurred: {str(e)}"}
+        return {"error": "An internal error has occurred."}
