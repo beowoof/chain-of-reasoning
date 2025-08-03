@@ -7,12 +7,13 @@ packages = [{include = "src"}]
 
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.13"
+numpy = "^2.0.0"
 fastapi = "^0.110.0"
 uvicorn = {extras = ["standard"], version = "^0.23.2"}
-langchain = "^0.1.16"
-langchain-community = "^0.0.32"
-ollama = "^0.1.8"
+langchain = "^0.3.26"
+langchain-community = "^0.3.27"
+ollama = "^0.3.0"
 streamlit = "^1.32.2"
 faiss-cpu = "^1.8.0"
 pypdf = "^4.1.0"
