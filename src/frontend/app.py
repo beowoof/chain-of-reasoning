@@ -59,8 +59,20 @@ if st.button("Submit"):
             try:
                 response = client.post("/ask", json={"text": question})
                 response.raise_for_status()
+                response_data = response.json()
+                
+                # Display the answer
                 st.write("**Answer:**")
-                st.write(response.json()["answer"])
+                st.write(response_data["answer"])
+                
+                # Display thinking steps in a collapsible section
+                if "thinking_steps" in response_data:
+                    with st.expander("Show thinking process"):
+                        for step in response_data["thinking_steps"]:
+                            st.markdown("---")
+                            st.markdown(f"**Action:** {step['action']}")
+                            st.markdown(f"**Input:** {step['input']}")
+                            st.markdown(f"**Observation:** {step['observation']}")
             except httpx.RequestError as e:
                 st.error(f"Error connecting to backend: {e}")
             except httpx.HTTPStatusError as e:
