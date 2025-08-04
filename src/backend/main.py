@@ -9,7 +9,7 @@ from .vector_store import (
     load_documents_from_pdf,
     load_documents_from_url,
 )
-from .agent import create_agent
+from .agent import create_agent, summarise_answer
 
 # --- Global State ---
 vector_store = None
@@ -83,9 +83,10 @@ def ask(question: Question):
                 "input": step[0].tool_input,
                 "observation": step[1]
             })
-
+        
+        improved_answer = summarise_answer(thinking_steps, final_answer)
         return {
-            "answer": final_answer,
+            "answer": improved_answer,
             "thinking_steps": thinking_steps
         }
     except Exception as e:

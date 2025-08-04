@@ -16,13 +16,15 @@ def test_ask_endpoint_no_agent():
 def test_ask_endpoint_success(mock_agent_executor):
     """Test /ask endpoint with a successful agent invocation."""
     mock_agent_executor.invoke.return_value = {"output": "The answer is 42.", "intermediate_steps": []}
-    response = client.post("/ask", json={"text": "What is the meaning of life?"})
-    assert response.status_code == 200
-    assert response.json() == {
-        "answer": "The answer is 42.",
-        "thinking_steps": []
-    }
-    mock_agent_executor.invoke.assert_called_once_with({"input": "What is the meaning of life?"})
+    with patch("src.backend.main.summarise_answer", return_value="The answer is 42.") as mock_summarise:
+        response = client.post("/ask", json={"text": "What is the meaning of life?"})
+        assert response.status_code == 200
+        assert response.json() == {
+            "answer": "The answer is 42.",
+            "thinking_steps": []
+        }
+        mock_agent_executor.invoke.assert_called_once_with({"input": "What is the meaning of life?"})
+        mock_summarise.assert_called_once()
 
 @patch("src.backend.main.agent_executor")
 def test_ask_endpoint_exception(mock_agent_executor):
@@ -30,7 +32,7 @@ def test_ask_endpoint_exception(mock_agent_executor):
     mock_agent_executor.invoke.side_effect = Exception("Agent error")
     response = client.post("/ask", json={"text": "Cause an error"})
     assert response.status_code == 200
-    assert "An error occurred: Agent error" in response.json()["error"]
+    assert response.json()["error"] == "An internal error has occurred."
 
 @patch("src.backend.main.load_documents_from_pdf", side_effect=Exception("PDF load error"))
 @patch("src.backend.main.process_and_store_documents")
