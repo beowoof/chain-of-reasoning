@@ -1,7 +1,7 @@
 """
 Agent configuration and creation module.
 """
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM as Ollama
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from langchain.tools import BaseTool
@@ -10,6 +10,7 @@ from langchain_community.vectorstores.faiss import FAISS
 from tavily import TavilyClient
 import os
 import time
+from typing import List, Dict
 
 def create_rag_tool(vector_store: FAISS | None, summarizer_llm: Ollama) -> BaseTool:
     """Creates the RAG tool with vector store dependency."""
@@ -150,3 +151,43 @@ Thought:{agent_scratchpad}
         max_iterations=10,
         return_intermediate_steps=True # This is key for debugging
     )
+
+def summarise_answer(
+    thinking_steps: List[Dict[str, str]],
+    final_answer: str,
+    model: str = "llama3:instruct",
+    temperature: float = 0.2
+) -> str:
+    """
+    Enriches the agent's final answer using the reasoning trace and a summarizer LLM.
+
+    Args:
+        thinking_steps: List of reasoning steps taken by the agent.
+        final_answer: The agent's original final answer.
+        model: The LLM model to use for summarization.
+        temperature: The temperature parameter for the LLM.
+
+    Returns:
+        An improved, more complete answer as a string.
+    """
+    reasoning_trace = "\n".join([
+        f"Action: {s['action']}\nInput: {s['input']}\nObservation: {s['observation']}"
+        for s in thinking_steps
+    ])
+    enrichment_prompt = ChatPromptTemplate.from_template(
+        "You are an expert assistant. Using the following research notes and answer, "
+        "compose a complete, insightful, and helpful response to the user's question. "
+        "Do not mention the research process, notes, or that you are rewriting. "
+        "Write as if you are directly answering the user's question. "
+        "Cite sources if present.\n\n"
+        "Research Notes:\n{trace}\n\n"
+        "Draft Answer:\n{answer}\n\n"
+        "Final Answer:"
+    )
+    summarizer_llm = Ollama(model=model, temperature=temperature)
+    summarization_chain = enrichment_prompt | summarizer_llm | StrOutputParser()
+    improved_answer = summarization_chain.invoke({
+        "trace": reasoning_trace,
+        "answer": final_answer
+    })
+    return improved_answer
