@@ -2,7 +2,7 @@
 name = "chain-of-reasoning"
 version = "0.1.0"
 description = "A proof-of-concept RAG and chain of reasoning application."
-authors = ["Gemini"]
+authors = [{"name" = "Matthew Toy", "email" = "matt.toy@gmail.com"}]
 packages = [{include = "src"}]
 
 
