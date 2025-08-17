@@ -22,7 +22,12 @@ async def lifespan(app):
     print("Starting up and initializing resources...")
     embeddings = get_embeddings()
     vector_store = load_vector_store(embeddings)
-    agent_executor = create_new_agent()
+    try:
+        agent_executor = create_new_agent()
+    except ValueError as e:
+        # Gracefully handle missing configuration such as API keys.
+        print(f"Agent initialisation failed: {e}")
+        agent_executor = None
     print("Startup complete.")
     yield
 
