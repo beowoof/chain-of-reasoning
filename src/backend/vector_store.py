@@ -40,6 +40,8 @@ def process_and_store_documents(documents, vector_store, embeddings):
         vector_store.add_documents(splits)
 
     print(f"Saving vector store to {VECTOR_STORE_PATH}")
+    # Ensure the target directory exists before saving the index to disk.
+    os.makedirs(os.path.dirname(VECTOR_STORE_PATH), exist_ok=True)
     vector_store.save_local(VECTOR_STORE_PATH)
     return vector_store
 
